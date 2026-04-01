@@ -24,6 +24,29 @@ Esta es una API REST profesional construida con **Slim Framework 4**, diseñada 
 - **Personalización Institucional:** Gestión de logos y plantillas de encabezado para reportes personalizados.
 - **Dashboard:** Resumen de horarios y actividades actuales para los docentes.
 
+## 📂 Estructura del Proyecto
+
+El proyecto sigue una arquitectura organizada para facilitar el mantenimiento y la escalabilidad:
+
+```text
+registroUx-api/
+├── app/                    # Lógica central de la aplicación
+│   ├── config/             # Archivos de configuración (DB, logs)
+│   ├── controllers/        # Controladores que gestionan las peticiones HTTP
+│   ├── middleware/         # Middleware para JWT, CORS y manejo de errores
+│   ├── models/             # Modelos de base de datos (Eloquent)
+│   ├── repositories/       # Capa de persistencia (Abstracción de modelos)
+│   ├── routes/             # Definición de rutas de la API
+│   ├── services/           # Lógica de negocio e integraciones externas
+│   └── validators/         # Reglas de validación para inputs
+├── db/
+│   └── migrations/         # Control de versiones de la base de datos (Phinx)
+├── logs/                   # Archivos de registro de errores y actividad
+├── public/                 # Directorio raiz del servidor web (index.php)
+├── vendor/                 # Dependencias instaladas vía Composer
+└── phinx.php               # Configuración de migraciones
+```
+
 ## 🛠️ Instalación y Configuración
 
 ### Requisitos Previos
