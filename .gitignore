@@ -1,0 +1,9 @@
+/vendor/
+/logs/*.log
+/logs/*.txt
+.env
+.idea/
+.vscode/
+*.bak
+*.tmp
+migration_output.txt

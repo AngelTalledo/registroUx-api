@@ -1,0 +1,45 @@
+### Registro de Usuario
+# Paso 1: Crear un nuevo usuario
+POST http://localhost/registroUx-api/public/api/users
+Content-Type: application/json
+
+{
+    "email": "docente1@escuela.com",
+    "password": "miPasswordSeguro123"
+}
+
+### Login (Autenticación)
+# Paso 2: Iniciar sesión para obtener el Token JWT
+POST http://localhost/registroUx-api/public/api/login
+Content-Type: application/json
+
+{
+    "email": "docente1@escuela.com",
+    "password": "miPasswordSeguro123"
+}
+
+###
+
+### Registro de Docente
+# Paso 3: Crear el perfil del docente usando el ID generado en el paso 1
+# Nota: Cambia el "user_id" por el ID que te devuelve la petición anterior
+POST http://localhost/registroUx-api/public/api/teachers
+Content-Type: application/json
+
+{
+    "user_id": 1,
+    "names": "María Elena",
+    "last_names": "González Pérez"
+}
+
+###
+
+### Listar Usuarios
+# Para verificar que el usuario se creó
+GET http://localhost/registroUx-api/public/api/users
+
+###
+
+### Listar Docentes
+# Para verificar que el docente se creó
+GET http://localhost/registroUx-api/public/api/teachers
