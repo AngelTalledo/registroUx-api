@@ -30,7 +30,7 @@ class StudentRepository
             $query->onlyTrashed();
         }
 
-        return $query->orderBy('last_names', 'asc')->get();
+        return $query->orderBy('full_name', 'asc')->get();
     }
 
     public function findByIdAndTeacher(int $id, int $teacherId): ?Student

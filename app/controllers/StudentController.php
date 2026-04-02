@@ -67,8 +67,7 @@ class StudentController
         $data['teacher_id'] = $teacherId;
 
         $validator = v::key('dni', v::stringType()->length(8, 20))
-                        ->key('names', v::stringType()->length(1, 100))
-                        ->key('last_names', v::stringType()->length(1, 100))
+                        ->key('full_name', v::stringType()->length(1, 200))
                         ->key('classroom_id', v::intVal())
                         ->key('course_id', v::intVal())
                         ->key('grade_id', v::intVal())
@@ -100,8 +99,7 @@ class StudentController
         $data = $request->getParsedBody();
 
         $validator = v::key('dni', v::optional(v::stringType()->length(8, 20)))
-                        ->key('names', v::optional(v::stringType()->length(1, 100)))
-                        ->key('last_names', v::optional(v::stringType()->length(1, 100)))
+                        ->key('full_name', v::optional(v::stringType()->length(1, 200)))
                         ->key('classroom_id', v::optional(v::intVal()))
                         ->key('course_id', v::optional(v::intVal()))
                         ->key('grade_id', v::optional(v::intVal()))

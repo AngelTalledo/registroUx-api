@@ -93,7 +93,7 @@ class AttendanceReportService implements AttendanceReportServiceInterface
         $classroomSection = $classroom ? $classroom->section : 'N/A';
         $courseName = $course ? $course->name : 'N/A';
         $periodName = $period ? $period->name : 'N/A';
-        $teacherName = $teacher ? ($teacher->last_names . ', ' . $teacher->names) : 'N/A';
+        $teacherName = $teacher ? $teacher->full_name : 'N/A';
 
         $html = '
         <html>
@@ -195,7 +195,7 @@ class AttendanceReportService implements AttendanceReportServiceInterface
         foreach ($students as $index => $student) {
             $html .= '<tr>
                         <td>' . ($index + 1) . '</td>
-                        <td class="student-name">' . $student->last_names . ', ' . $student->names . '</td>';
+                        <td class="student-name">' . $student->full_name . '</td>';
             
             foreach ($sessions as $session) {
                 $status = $attendanceMap[$student->id][$session->id] ?? '-';

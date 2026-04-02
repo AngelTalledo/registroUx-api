@@ -104,7 +104,7 @@ class EvaluationReportService implements EvaluationReportServiceInterface
         $classroomSection = $classroom ? $classroom->section : 'N/A';
         $courseName = $course ? $course->name : 'N/A';
         $periodName = $period ? $period->name : 'N/A';
-        $teacherName = $teacher ? ($teacher->last_names . ', ' . $teacher->names) : 'N/A';
+        $teacherName = $teacher ? $teacher->full_name : 'N/A';
 
         $html = '
         <html>
@@ -226,7 +226,7 @@ class EvaluationReportService implements EvaluationReportServiceInterface
         foreach ($students as $index => $student) {
             $html .= '<tr>
                         <td class="num-col">' . ($index + 1) . '</td>
-                        <td class="student-name">' . $student->last_names . ', ' . $student->names . '</td>';
+                        <td class="student-name">' . $student->full_name . '</td>';
             
             $totalPoints = 0;
             $compCount = 0;

@@ -132,7 +132,7 @@ class EvaluationExcelService implements EvaluationExcelServiceInterface
         // Metadata Info
         $row = 4;
         $sheet->setCellValue('A'.$row, 'DOCENTE:');
-        $sheet->setCellValue('B'.$row, strtoupper($teacher ? ($teacher->last_names . ', ' . $teacher->names) : 'N/A'));
+        $sheet->setCellValue('B'.$row, strtoupper($teacher ? $teacher->full_name : 'N/A'));
         $sheet->setCellValue('E'.$row, 'ÁREA:');
         $sheet->setCellValue('F'.$row, strtoupper($course ? $course->name : 'N/A'));
         $sheet->setCellValue('I'.$row, 'GRADO Y SECCIÓN:');
@@ -201,7 +201,7 @@ class EvaluationExcelService implements EvaluationExcelServiceInterface
         $dataRow = $row + 3;
         foreach ($students as $index => $student) {
             $sheet->setCellValue('A'.$dataRow, $index + 1);
-            $sheet->setCellValue('B'.$dataRow, $student->last_names . ', ' . $student->names);
+            $sheet->setCellValue('B'.$dataRow, $student->full_name);
             
             // Apply borders to # and Student Name
             $sheet->getStyle('A'.$dataRow.':B'.$dataRow)->applyFromArray([

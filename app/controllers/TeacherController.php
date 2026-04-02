@@ -33,8 +33,7 @@ class TeacherController
         $data = $request->getParsedBody();
         
         $validator = v::key('user_id', v::intVal())
-                        ->key('names', v::stringType()->notEmpty())
-                        ->key('last_names', v::stringType()->notEmpty())
+                        ->key('full_name', v::stringType()->notEmpty())
                         ->key('gender', v::in(['F', 'M']), false); // Optional gender field, must be F or M
 
         try {
@@ -54,8 +53,7 @@ class TeacherController
         $id = (int) $args['id'];
         $data = $request->getParsedBody();
 
-        $validator = v::key('names', v::stringType()->notEmpty(), false)
-                        ->key('last_names', v::stringType()->notEmpty(), false)
+        $validator = v::key('full_name', v::stringType()->notEmpty(), false)
                         ->key('gender', v::in(['F', 'M']), false);
 
         try {

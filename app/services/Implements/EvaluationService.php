@@ -100,7 +100,7 @@ class EvaluationService implements EvaluationServiceInterface
             ->where('course_id', $courseId)
             ->where('grade_id', $gradeId)
             ->where('classroom_id', $classroomId)
-            ->orderBy('last_names', 'asc')
+            ->orderBy('full_name', 'asc')
             ->get();
 
         $reportStudents = $students->map(function ($student) use ($sessionCompetencies) {
@@ -135,8 +135,7 @@ class EvaluationService implements EvaluationServiceInterface
 
             return [
                 'id' => $student->id,
-                'names' => $student->names,
-                'last_names' => $student->last_names,
+                'full_name' => $student->full_name,
                 'is_exonerated' => $student->is_exonerated,
                 'evaluations' => $studentEvaluations
             ];
