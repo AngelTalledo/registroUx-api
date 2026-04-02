@@ -150,12 +150,13 @@ class StudentController
         $teacherId = $this->resolveTeacherIdOrResponse($request, $response, $this->userService);
         if ($teacherId instanceof Response) return $teacherId;
 
-        $data = $request->getParsedBody();
+        $body = $request->getParsedBody();
+        $data = $body['students'] ?? $body;
 
         if (!is_array($data)) {
             return $this->jsonResponse($response, [
                 'status' => 'error',
-                'message' => 'Los datos deben ser un arreglo de estudiantes'
+                'message' => 'Los datos deben ser un arreglo de estudiantes o un objeto con la clave "students"'
             ], 400);
         }
 
