@@ -119,6 +119,10 @@ return function (App $app) {
         $group->delete('/evaluations/{id}', [\App\Controllers\EvaluationController::class, 'delete']);
         $group->post('/evaluations/report', [\App\Controllers\EvaluationController::class, 'report']);
    
+        // Evaluaciones Diagnósticas
+        $group->get('/diagnostic-evaluations', [\App\Controllers\DiagnosticEvaluationController::class, 'index']);
+        $group->post('/diagnostic-evaluations/upsert', [\App\Controllers\DiagnosticEvaluationController::class, 'upsert']);
+
         // Evidencias
         $group->get('/evidences', [\App\Controllers\EvidenceController::class, 'index']);
         $group->post('/evidences', [\App\Controllers\EvidenceController::class, 'store']);
