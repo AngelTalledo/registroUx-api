@@ -81,15 +81,26 @@ class StudentRepository
                 'periods.id as period_id',
                 'periods.name as period_name'
             )
+            ->selectRaw('COUNT(students.id) as students_count')
             ->join('classrooms', 'students.classroom_id', '=', 'classrooms.id')
             ->join('academic_years', 'classrooms.academic_year_id', '=', 'academic_years.id')
             ->join('periods', 'academic_years.id', '=', 'periods.academic_year_id')
             ->join('courses', 'students.course_id', '=', 'courses.id')
             ->join('grades', 'students.grade_id', '=', 'grades.id')
             ->where('students.teacher_id', $teacherId)
+            ->where('students.status', true)
             ->where('academic_years.is_current', true)
             ->where('periods.is_current', true)
-            ->distinct()
+            ->groupBy(
+                'courses.id', 
+                'courses.name',
+                'grades.id', 
+                'grades.name',
+                'classrooms.id', 
+                'classrooms.section',
+                'periods.id',
+                'periods.name'
+            )
             ->get();
     }
 }
