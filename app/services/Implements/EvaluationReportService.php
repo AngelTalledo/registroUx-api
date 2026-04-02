@@ -46,7 +46,8 @@ class EvaluationReportService implements EvaluationReportServiceInterface
         $students = Student::where('classroom_id', $filters['aula_id'])
             ->where('teacher_id', $teacherId)
             ->where('status', 1)
-            ->orderBy('last_names', 'asc')
+            ->orderBy('order_number', 'asc')
+            ->orderBy('full_name', 'asc')
             ->get();
 
         // 3. Fetch Competencies for this course

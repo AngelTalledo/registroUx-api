@@ -84,6 +84,7 @@ return function (App $app) {
         // Estudiantes
         $group->get('/students/my-courses', [\App\Controllers\StudentController::class, 'myCourses']);
         $group->get('/students', [\App\Controllers\StudentController::class, 'index']);
+        $group->post('/students/bulk', [\App\Controllers\StudentController::class, 'bulkStore']);
         $group->post('/students', [\App\Controllers\StudentController::class, 'store']);
         $group->get('/students/{id}', [\App\Controllers\StudentController::class, 'show']);
         $group->put('/students/{id}', [\App\Controllers\StudentController::class, 'update']);

@@ -49,11 +49,13 @@ class AuthController
 
         $issuedAt = time();
         $expirationTime = $issuedAt + (60 * 60 * 24 * 7); // Token válido por 7 días
+        $teacherId = $user->teacher ? $user->teacher->id : null;
         $payload = [
             'iat' => $issuedAt,
             'exp' => $expirationTime,
             'sub' => $user->id,
-            'email' => $user->email
+            'email' => $user->email,
+            'teacher_id' => $teacherId
         ];
 
         $token = $this->authService->generateToken($payload);
@@ -66,6 +68,7 @@ class AuthController
                 'user' => [
                     'id' => $user->id,
                     'email' => $user->email,
+                    'teacher_id' => $user->teacher ? $user->teacher->id : null,
                     'teacher' => $user->teacher
                 ]
             ]
@@ -86,6 +89,7 @@ class AuthController
                 'user' => [
                     'id' => $user->id,
                     'email' => $user->email,
+                    'teacher_id' => $user->teacher ? $user->teacher->id : null,
                     'teacher' => $user->teacher
                 ]
             ]
@@ -102,11 +106,13 @@ class AuthController
 
         $issuedAt = time();
         $expirationTime = $issuedAt + (60 * 60 * 24 * 7); // Otros 7 días
+        $teacherId = $user->teacher ? $user->teacher->id : null;
         $payload = [
             'iat' => $issuedAt,
             'exp' => $expirationTime,
             'sub' => $user->id,
-            'email' => $user->email
+            'email' => $user->email,
+            'teacher_id' => $teacherId
         ];
 
         $token = $this->authService->generateToken($payload);

@@ -47,4 +47,73 @@ class StudentService implements StudentServiceInterface
     {
         return $this->repository->findMyCourses($teacherId);
     }
+
+    public function bulkStoreStudents(int $teacherId, array $data): array
+    {
+        // 1. Fetch current maps for resolution (Optimization: fetch once)
+        $courses = \App\Models\Course::where('teacher_id', $teacherId)->get()->keyBy('name');
+        $grades = \App\Models\Grade::where('teacher_id', $teacherId)->get()->keyBy('name');
+        $classrooms = \App\Models\Classroom::where('teacher_id', $teacherId)->get()->keyBy('section');
+
+        $processed = 0;
+        $created = 0;
+        $updated = 0;
+        $errors = [];
+
+        foreach ($data as $index => $item) {
+            try {
+                // Resolution
+                $courseId = isset($item['curso']) && isset($courses[$item['curso']]) ? $courses[$item['curso']]->id : null;
+                $gradeId = isset($item['grado']) && isset($grades[$item['grado']]) ? $grades[$item['grado']]->id : null;
+                $classroomId = isset($item['aula']) && isset($classrooms[$item['aula']]) ? $classrooms[$item['aula']]->id : null;
+
+                if (!$courseId || !$gradeId || !$classroomId) {
+                    $missing = [];
+                    if (!$courseId) $missing[] = "curso: " . ($item['curso'] ?? 'n/a');
+                    if (!$gradeId) $missing[] = "grado: " . ($item['grado'] ?? 'n/a');
+                    if (!$classroomId) $missing[] = "aula: " . ($item['aula'] ?? 'n/a');
+                    
+                    $errors[] = "Fila $index: No se pudo resolver " . implode(', ', $missing);
+                    continue;
+                }
+
+                $studentData = [
+                    'teacher_id' => $teacherId,
+                    'dni' => $item['dni'] ?? '',
+                    'full_name' => $item['full_name'],
+                    'gender' => $item['gender'] ?? null,
+                    'status' => isset($item['status']) ? (bool)$item['status'] : true,
+                    'is_exonerated' => isset($item['is_exonerated']) ? (bool)$item['is_exonerated'] : false,
+                    'order_number' => isset($item['order_number']) ? (int)$item['order_number'] : null,
+                    'phone_number' => $item['phone_number'] ?? '',
+                    'course_id' => $courseId,
+                    'grade_id' => $gradeId,
+                    'classroom_id' => $classroomId,
+                ];
+
+                $student = \App\Models\Student::updateOrCreate(
+                    ['id' => $item['id'], 'teacher_id' => $teacherId],
+                    $studentData
+                );
+
+                if ($student->wasRecentlyCreated) {
+                    $created++;
+                } else {
+                    $updated++;
+                }
+                $processed++;
+
+            } catch (\Exception $e) {
+                $errors[] = "Fila $index: " . $e->getMessage();
+            }
+        }
+
+        return [
+            'total' => count($data),
+            'processed' => $processed,
+            'created' => $created,
+            'updated' => $updated,
+            'errors' => $errors
+        ];
+    }
 }

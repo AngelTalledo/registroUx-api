@@ -78,6 +78,7 @@ class AttendanceService implements AttendanceServiceInterface
             ->where('course_id', $courseId)
             ->where('grade_id', $gradeId)
             ->where('classroom_id', $classroomId)
+            ->orderBy('order_number', 'asc')
             ->orderBy('full_name', 'asc')
             ->get();
 

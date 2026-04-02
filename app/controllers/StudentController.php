@@ -65,6 +65,9 @@ class StudentController
         if ($teacherId instanceof Response) return $teacherId;
 
         $data['teacher_id'] = $teacherId;
+        if (!isset($data['status'])) {
+            $data['status'] = true;
+        }
 
         $validator = v::key('dni', v::stringType()->length(8, 20))
                         ->key('full_name', v::stringType()->length(1, 200))
@@ -140,6 +143,29 @@ class StudentController
         }
 
         return $this->jsonResponse($response, ['status' => 'success', 'message' => 'Estudiante eliminado']);
+    }
+
+    public function bulkStore(Request $request, Response $response): Response
+    {
+        $teacherId = $this->resolveTeacherIdOrResponse($request, $response, $this->userService);
+        if ($teacherId instanceof Response) return $teacherId;
+
+        $data = $request->getParsedBody();
+
+        if (!is_array($data)) {
+            return $this->jsonResponse($response, [
+                'status' => 'error',
+                'message' => 'Los datos deben ser un arreglo de estudiantes'
+            ], 400);
+        }
+
+        $result = $this->service->bulkStoreStudents($teacherId, $data);
+
+        return $this->jsonResponse($response, [
+            'status' => 'success',
+            'message' => 'Carga masiva procesada',
+            'summary' => $result
+        ]);
     }
 
     public function myCourses(Request $request, Response $response): Response
