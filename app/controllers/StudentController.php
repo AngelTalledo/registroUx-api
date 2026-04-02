@@ -73,6 +73,8 @@ class StudentController
                         ->key('course_id', v::intVal())
                         ->key('grade_id', v::intVal())
                         ->key('gender', v::optional(v::stringType()->length(1, 20)))
+                        ->key('phone_number', v::optional(v::stringType()->length(0, 20)))
+                        ->key('order_number', v::optional(v::intVal()))
                         ->key('status', v::optional(v::boolVal()));
 
         try {
@@ -104,6 +106,8 @@ class StudentController
                         ->key('course_id', v::optional(v::intVal()))
                         ->key('grade_id', v::optional(v::intVal()))
                         ->key('gender', v::optional(v::stringType()->length(1, 20)))
+                        ->key('phone_number', v::optional(v::stringType()->length(0, 20)))
+                        ->key('order_number', v::optional(v::intVal()))
                         ->key('status', v::optional(v::boolVal()));
 
         try {

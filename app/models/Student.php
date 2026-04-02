@@ -22,6 +22,8 @@ class Student extends Model
         'names',
         'last_names',
         'gender',
+        'phone_number',
+        'order_number',
         'status',
         'is_exonerated'
     ];
