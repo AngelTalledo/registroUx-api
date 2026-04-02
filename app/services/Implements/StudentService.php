@@ -62,16 +62,20 @@ class StudentService implements StudentServiceInterface
 
         foreach ($data as $index => $item) {
             try {
-                // Resolution
-                $courseId = isset($item['curso']) && isset($courses[$item['curso']]) ? $courses[$item['curso']]->id : null;
-                $gradeId = isset($item['grado']) && isset($grades[$item['grado']]) ? $grades[$item['grado']]->id : null;
-                $classroomId = isset($item['aula']) && isset($classrooms[$item['aula']]) ? $classrooms[$item['aula']]->id : null;
+                // Resolution (Strictly using English keys: course, grade, classroom)
+                $courseName = $item['course'] ?? null;
+                $gradeName = $item['grade'] ?? null;
+                $sectionName = $item['classroom'] ?? null;
+
+                $courseId = $courseName && isset($courses[$courseName]) ? $courses[$courseName]->id : null;
+                $gradeId = $gradeName && isset($grades[$gradeName]) ? $grades[$gradeName]->id : null;
+                $classroomId = $sectionName && isset($classrooms[$sectionName]) ? $classrooms[$sectionName]->id : null;
 
                 if (!$courseId || !$gradeId || !$classroomId) {
                     $missing = [];
-                    if (!$courseId) $missing[] = "curso: " . ($item['curso'] ?? 'n/a');
-                    if (!$gradeId) $missing[] = "grado: " . ($item['grado'] ?? 'n/a');
-                    if (!$classroomId) $missing[] = "aula: " . ($item['aula'] ?? 'n/a');
+                    if (!$courseId) $missing[] = "course: " . ($courseName ?? 'n/a');
+                    if (!$gradeId) $missing[] = "grade: " . ($gradeName ?? 'n/a');
+                    if (!$classroomId) $missing[] = "classroom: " . ($sectionName ?? 'n/a');
                     
                     $errors[] = "Fila $index: No se pudo resolver " . implode(', ', $missing);
                     continue;
