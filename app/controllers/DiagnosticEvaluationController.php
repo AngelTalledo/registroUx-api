@@ -32,15 +32,19 @@ class DiagnosticEvaluationController
         if ($teacherId instanceof Response) return $teacherId;
 
         $queryParams = $request->getQueryParams();
-        $filters = [
-            'period_id' => isset($queryParams['period_id']) ? (int) $queryParams['period_id'] : null,
-            'student_id' => isset($queryParams['student_id']) ? (int) $queryParams['student_id'] : null,
-            'course_id' => isset($queryParams['course_id']) ? (int) $queryParams['course_id'] : null,
-            'aula_id' => isset($queryParams['aula_id']) ? (int) $queryParams['aula_id'] : null,
-        ];
+        
+        $courseId = isset($queryParams['course_id']) ? (int) $queryParams['course_id'] : null;
+        $classroomId = isset($queryParams['aula_id']) ? (int) $queryParams['aula_id'] : null;
 
-        $evaluations = $this->service->getAllEvaluationsByTeacher($teacherId, $filters);
-        return $this->jsonResponse($response, $evaluations);
+        if (!$courseId || !$classroomId) {
+            return $this->jsonResponse($response, [
+                'status' => 'error',
+                'message' => 'course_id y aula_id son obligatorios para obtener el listado diagnóstico'
+            ], 400);
+        }
+
+        $report = $this->service->getDiagnosticReport($teacherId, $courseId, $classroomId);
+        return $this->jsonResponse($response, ['status' => 'success', 'data' => $report]);
     }
 
     public function upsert(Request $request, Response $response): Response

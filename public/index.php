@@ -236,6 +236,14 @@ $container->set(\App\Controllers\PasswordResetController::class, function ($c) {
     );
 });
 
+$container->set(\App\Controllers\DiagnosticEvaluationController::class, function ($c) {
+    return new \App\Controllers\DiagnosticEvaluationController(
+        $c->get(\App\Services\DiagnosticEvaluationServiceInterface::class),
+        $c->get(\App\Services\UserServiceInterface::class),
+        $c->get('logger')
+    );
+});
+
 // Bind interfaces to implementations
 $container->set(\App\Services\ItemServiceInterface::class, function ($c) {
     return new \App\Services\Implements\ItemService(new \App\Repositories\ItemRepository());
@@ -346,6 +354,10 @@ $container->set(\App\Services\HistoricalClosingServiceInterface::class, function
 
 $container->set(\App\Services\PasswordResetServiceInterface::class, function ($c) {
     return new \App\Services\Implements\PasswordResetService();
+});
+
+$container->set(\App\Services\DiagnosticEvaluationServiceInterface::class, function ($c) {
+    return new \App\Services\Implements\DiagnosticEvaluationService(new \App\Repositories\DiagnosticEvaluationRepository());
 });
 
 $container->set(\App\Services\AuthServiceInterface::class, function ($c) {

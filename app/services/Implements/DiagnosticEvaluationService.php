@@ -51,4 +51,68 @@ class DiagnosticEvaluationService implements DiagnosticEvaluationServiceInterfac
     {
         return $this->repository->deleteByTeacher($id, $teacherId);
     }
+
+    public function getDiagnosticReport(int $teacherId, int $courseId, int $classroomId): array
+    {
+        $currentPeriod = \App\Models\Period::where('is_current', true)->first();
+        $periodId = $currentPeriod ? $currentPeriod->id : null;
+
+        $competencies = \App\Models\Competency::where('course_id', $courseId)
+            ->where('teacher_id', $teacherId)
+            ->get();
+
+        $students = \App\Models\Student::where('teacher_id', $teacherId)
+            ->where('course_id', $courseId)
+            ->where('classroom_id', $classroomId)
+            ->orderBy('order_number', 'asc')
+            ->orderBy('full_name', 'asc')
+            ->get();
+
+        $allEvaluations = DiagnosticEvaluation::where('teacher_id', $teacherId)
+            ->where('course_id', $courseId)
+            ->where('aula_id', $classroomId)
+            ->get()
+            ->groupBy('student_id');
+
+        $competenciesReport = $competencies->map(function ($c) {
+            return [
+                'id' => $c->id,
+                'name' => $c->name,
+                'sessions' => [
+                    [
+                        'id' => $c->id, // Use competency id as identifier for the fake session
+                        'session_competency_id' => $c->id,
+                        'label' => 'DIAG',
+                        'title' => 'Evaluación Diagnóstica',
+                        'date' => '' 
+                    ]
+                ]
+            ];
+        });
+
+        $reportStudents = $students->map(function ($student) use ($allEvaluations, $competencies) {
+            $studentEvals = $allEvaluations->get($student->id, new Collection());
+            
+            $mappedEvals = $competencies->map(function ($c) use ($studentEvals) {
+                $eval = $studentEvals->where('competency_id', $c->id)->first();
+                return [
+                    'session_competency_id' => $c->id,
+                    'evaluations' => $eval ? [['grade' => $eval->grade]] : [],
+                    'evidence' => []
+                ];
+            });
+
+            return [
+                'id' => $student->id,
+                'full_name' => $student->full_name,
+                'is_exonerated' => $student->is_exonerated,
+                'evaluations' => $mappedEvals
+            ];
+        });
+
+        return [
+            'competencies' => $competenciesReport,
+            'students' => $reportStudents
+        ];
+    }
 }

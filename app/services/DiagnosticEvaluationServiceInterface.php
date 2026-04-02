@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Collection;
 interface DiagnosticEvaluationServiceInterface
 {
     public function getAllEvaluationsByTeacher(int $teacherId, array $filters = []): Collection;
+    public function getDiagnosticReport(int $teacherId, int $courseId, int $classroomId): array;
     public function getEvaluationById(int $id, int $teacherId): ?DiagnosticEvaluation;
     public function createEvaluation(array $data): DiagnosticEvaluation;
     public function upsertEvaluation(array $data): DiagnosticEvaluation;
