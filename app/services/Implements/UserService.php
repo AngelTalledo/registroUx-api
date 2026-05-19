@@ -31,6 +31,11 @@ class UserService implements UserServiceInterface
         return $this->repository->create($data);
     }
 
+    public function emailExists(string $email): bool
+    {
+        return (bool)$this->repository->findByEmail($email);
+    }
+
     public function getUserById(int $id): ?User
     {
         return $this->repository->findById($id);
@@ -55,5 +60,17 @@ class UserService implements UserServiceInterface
         }
 
         return null; // Autenticación fallida
+    }
+
+    public function changePassword(int $userId, string $currentPassword, string $newPassword): bool
+    {
+        $user = $this->repository->findById($userId);
+
+        if ($user && password_verify($currentPassword, $user->password)) {
+            $user->password = password_hash($newPassword, PASSWORD_BCRYPT);
+            return (bool)$user->save();
+        }
+
+        return false;
     }
 }

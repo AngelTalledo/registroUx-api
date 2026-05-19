@@ -60,7 +60,7 @@ class DiagnosticEvaluationController
                         ->key('competency_id', v::intVal())
                         ->key('course_id', v::intVal())
                         ->key('aula_id', v::intVal())
-                        ->key('grade', v::stringType()->length(1, 2))
+                        ->key('grade', v::optional(v::stringType()))
                         ->key('evaluation_date', v::date('Y-m-d'));
 
         try {
@@ -73,8 +73,50 @@ class DiagnosticEvaluationController
             ], 400);
         }
 
-        $evaluation = $this->service->upsertEvaluation($data);
-        return $this->jsonResponse($response, ['status' => 'success', 'data' => $evaluation]);
+        try {
+            $evaluation = $this->service->upsertEvaluation($data);
+            return $this->jsonResponse($response, ['status' => 'success', 'data' => $evaluation]);
+        } catch (\InvalidArgumentException $e) {
+            return $this->jsonResponse($response, [
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
+    }
+
+    public function bulkUpsert(Request $request, Response $response): Response
+    {
+        $data = $request->getParsedBody();
+        $teacherId = $this->resolveTeacherIdOrResponse($request, $response, $this->userService);
+        if ($teacherId instanceof Response) return $teacherId;
+
+        $validator = v::key('course_id', v::stringType()->notEmpty())
+                        ->key('classroom_id', v::stringType()->notEmpty())
+                        ->key('period_id', v::stringType()->notEmpty())
+                        ->key('data', v::arrayType()->notEmpty());
+
+        try {
+            $validator->assert($data);
+        } catch (\Respect\Validation\Exceptions\NestedValidationException $e) {
+            return $this->jsonResponse($response, [
+                'status' => 'error', 
+                'message' => 'Datos inválidos',
+                'errors' => $e->getMessages()
+            ], 400);
+        }
+
+        try {
+            $success = $this->service->bulkUpsertEvaluations($data, $teacherId);
+            if ($success) {
+                return $this->jsonResponse($response, ['status' => 'success', 'message' => 'Evaluaciones guardadas correctamente']);
+            }
+            return $this->jsonResponse($response, ['status' => 'error', 'message' => 'Error al guardar las evaluaciones'], 500);
+        } catch (\InvalidArgumentException $e) {
+            return $this->jsonResponse($response, [
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
     }
 
     private function jsonResponse(Response $response, $data, int $status = 200): Response

@@ -23,6 +23,13 @@ class StudentRepository
         if (!empty($filters['grade_id'])) {
             $query->where('grade_id', $filters['grade_id']);
         }
+        if (!empty($filters['search'])) {
+            $searchTerm = $filters['search'];
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('full_name', 'like', "%{$searchTerm}%")
+                  ->orWhere('dni', 'like', "%{$searchTerm}%");
+            });
+        }
         if (isset($filters['status'])) {
             $query->where('status', $filters['status']);
         }
@@ -69,9 +76,9 @@ class StudentRepository
         return false;
     }
 
-    public function findMyCourses(int $teacherId): Collection
+    public function findMyCourses(int $teacherId, ?int $academicYearId = null, ?int $academicPeriodId = null): Collection
     {
-        return Student::select(
+        $query = Student::select(
                 'courses.id as course_id', 
                 'courses.name as course_name',
                 'grades.id as grade_id', 
@@ -85,13 +92,26 @@ class StudentRepository
             ->join('classrooms', 'students.classroom_id', '=', 'classrooms.id')
             ->join('academic_years', 'classrooms.academic_year_id', '=', 'academic_years.id')
             ->join('periods', 'academic_years.id', '=', 'periods.academic_year_id')
-            ->join('courses', 'students.course_id', '=', 'courses.id')
-            ->join('grades', 'students.grade_id', '=', 'grades.id')
+            ->join('courses', 'classrooms.course_id', '=', 'courses.id')
+            ->join('grades', 'classrooms.grade_id', '=', 'grades.id')
             ->where('students.teacher_id', $teacherId)
             ->where('students.status', true)
-            ->where('academic_years.is_current', true)
-            ->where('periods.is_current', true)
-            ->groupBy(
+            ->where('classrooms.status', true)
+            ->whereNull('classrooms.deleted_at');
+
+        if ($academicYearId !== null) {
+            $query->where('academic_years.id', $academicYearId);
+        } else {
+            $query->where('academic_years.is_current', true);
+        }
+
+        if ($academicPeriodId !== null) {
+            $query->where('periods.id', $academicPeriodId);
+        } else {
+            $query->where('periods.is_current', true);
+        }
+
+        return $query->groupBy(
                 'courses.id', 
                 'courses.name',
                 'grades.id', 

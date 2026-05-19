@@ -1,6 +1,6 @@
 <?php
 require __DIR__ . '/vendor/autoload.php';
-$settings = require __DIR__ . '/app/config/settings.php';
+$settings = require __DIR__ . '/app/Config/settings.php';
 $dbSettings = $settings['settings']['db'];
 
 use Illuminate\Database\Capsule\Manager as Capsule;

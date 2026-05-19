@@ -60,4 +60,25 @@ class EvaluationRepository
         }
         return false;
     }
+
+    public function getStatsByTeacherAndPeriod(int $teacherId, int $periodId): array
+    {
+        // Helper to map letters to numbers in SQL
+        $caseSql = "CASE evaluations.grade 
+            WHEN 'AD' THEN 4 
+            WHEN 'A' THEN 3 
+            WHEN 'B' THEN 2 
+            WHEN 'C' THEN 1 
+            ELSE 0 END";
+
+        $stats = Evaluation::join('session_competencies', 'evaluations.session_competency_id', '=', 'session_competencies.id')
+            ->join('courses', 'session_competencies.course_id', '=', 'courses.id')
+            ->where('evaluations.teacher_id', $teacherId)
+            ->where('session_competencies.period_id', $periodId)
+            ->selectRaw("AVG($caseSql) as average, courses.id as course_id, courses.name as course_name")
+            ->groupBy('courses.id', 'courses.name')
+            ->get();
+
+        return $stats->toArray();
+    }
 }

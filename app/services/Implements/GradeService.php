@@ -28,6 +28,11 @@ class GradeService implements GradeServiceInterface
         return $this->repository->findByIdAndTeacher($id, $teacherId);
     }
 
+    public function getGradeByName(string $name, int $teacherId): ?Grade
+    {
+        return $this->repository->findByNameAndTeacher($name, $teacherId);
+    }
+
     public function createGrade(array $data): Grade
     {
         return $this->repository->create($data);

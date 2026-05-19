@@ -15,7 +15,7 @@ return [
         'db' => [
             'driver' => 'mysql',
             'host' => 'localhost',
-            'database' => 'registroux_db',
+            'database' => 'atalledo_v3_registroux_db',
             'username' => 'root',
             'password' => '',
             'charset' => 'utf8mb4',

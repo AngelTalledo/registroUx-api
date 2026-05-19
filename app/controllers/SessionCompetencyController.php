@@ -65,6 +65,7 @@ class SessionCompetencyController
                         ->key('classroom_id', v::intVal())
                         ->key('date', v::date())
                         ->key('theme', v::optional(v::stringType()))
+                        ->key('description', v::optional(v::stringType()))
                         ->key('type', v::optional(v::stringType()));
 
         try {

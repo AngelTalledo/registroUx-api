@@ -67,6 +67,15 @@ class EvaluationReportService implements EvaluationReportServiceInterface
         $sessionGroups = $sessionCompetencies->groupBy('competency_id');
         $scIds = $sessionCompetencies->pluck('id')->toArray();
 
+        // --- CÁLCULO DE COLSPAN PARA EL PERIODO ---
+        // Se calcula el ancho total de la cabecera del periodo (Bimestre).
+        // El ancho es la suma de (cantidad de sesiones + 1 columna de promedio) para cada competencia.
+        $totalPeriodColspan = 0;
+        foreach ($competencies as $competency) {
+            $sessionsInComp = isset($sessionGroups[$competency->id]) ? count($sessionGroups[$competency->id]) : 0;
+            $totalPeriodColspan += ($sessionsInComp + 1);
+        }
+
         // 6. Fetch Evaluations
         $evaluations = Evaluation::whereIn('session_competency_id', $scIds)
             ->whereIn('student_id', $students->pluck('id')->toArray())
@@ -81,7 +90,7 @@ class EvaluationReportService implements EvaluationReportServiceInterface
         $teacher = Teacher::where('user_id', $teacherId)->first();
 
         // 7. Generate HTML
-        $html = $this->renderHtml($academicYear, $grade, $classroom, $course, $period, $students, $competencies, $evaluationMap, $institution, $sessionGroups, $teacher);
+        $html = $this->renderHtml($academicYear, $grade, $classroom, $course, $period, $students, $competencies, $evaluationMap, $institution, $sessionGroups, $teacher, $totalPeriodColspan);
 
         // 8. Convert to PDF
         $options = new Options();
@@ -98,7 +107,7 @@ class EvaluationReportService implements EvaluationReportServiceInterface
         return $dompdf->output();
     }
 
-    private function renderHtml($academicYear, $grade, $classroom, $course, $period, $students, $competencies, $evaluationMap, $institution = null, $sessionGroups = null, $teacher = null): string
+    private function renderHtml($academicYear, $grade, $classroom, $course, $period, $students, $competencies, $evaluationMap, $institution = null, $sessionGroups = null, $teacher = null, $totalPeriodColspan = 0): string
     {
         $yearName = $academicYear ? $academicYear->year : 'N/A';
         $gradeName = $grade ? $grade->name : 'N/A';
@@ -169,30 +178,30 @@ class EvaluationReportService implements EvaluationReportServiceInterface
 
         $instName = $institution ? $institution->name : 'INSTITUCIÓN EDUCATIVA';
         
-        $html .= '
-                    <div class="header-content">
-                        <p class="inst-title">' . $instName . '</p>
-                        <h1 class="main-report-title">REGISTRO AUXILIAR DE CALIFICACIONES</h1>
+        $html .= "
+                    <div class=\"header-content\">
+                        <p class=\"inst-title\">$instName</p>
+                        <h1 class=\"main-report-title\">REGISTRO AUXILIAR DE CALIFICACIONES</h1>
                     </div>
                 </div>
 
-                <table class="meta-table">
+                <table class=\"meta-table\">
                     <tr>
-                        <td width="35%"><span class="meta-label">DOCENTE:</span> ' . strtoupper($teacherName) . '</td>
-                        <td width="35%"><span class="meta-label">ÁREA:</span> ' . strtoupper($courseName) . '</td>
-                        <td width="30%"><span class="meta-label">GRADO Y SECCIÓN:</span> ' . strtoupper($gradeName . ' "' . $classroomSection . '"') . '</td>
+                        <td width=\"35%\"><span class=\"meta-label\">DOCENTE:</span> " . strtoupper($teacherName) . "</td>
+                        <td width=\"35%\"><span class=\"meta-label\">ÁREA:</span> " . strtoupper($courseName) . "</td>
+                        <td width=\"30%\"><span class=\"meta-label\">GRADO Y SECCIÓN:</span> " . strtoupper($gradeName . ' "' . $classroomSection . '"') . "</td>
                     </tr>
                 </table>
             </div>
-
             <table>
                 <thead>
-                    <tr class="bg-dark-gray">
-                        <th rowspan="4" class="num-col">N°</th>
-                        <th rowspan="4" style="text-align: center; padding-left: 10px; font-size: 16px; font-family: \'Agency FB\', sans-serif; font-weight: bold;">APELLIDOS Y NOMBRES</th>
-                        <th colspan="' . collect($sessionGroups)->sum(fn($g) => count($g) + 1) . '">' . strtoupper($periodName) . '</th>
+                    <tr class=\"bg-dark-gray\">
+                        <th rowspan=\"4\" class=\"num-col\">N°</th>
+                        <th rowspan=\"4\" style=\"text-align: center; padding-left: 10px; font-size: 16px; font-family: 'Agency FB', sans-serif; font-weight: bold;\">APELLIDOS Y NOMBRES</th>
+                        <!-- Usamos el colspan calculado al inicio para abarcar todas las competencias y promedios -->
+                        <th colspan=\"$totalPeriodColspan\">" . strtoupper($periodName) . " (Cols: $totalPeriodColspan)</th>
                     </tr>
-                    <tr>';
+";
         
         foreach ($competencies as $competency) {
             $sessionsInComp = isset($sessionGroups[$competency->id]) ? count($sessionGroups[$competency->id]) : 0;
@@ -234,8 +243,7 @@ class EvaluationReportService implements EvaluationReportServiceInterface
 
             foreach ($competencies as $competency) {
                 $sessionsInComp = $sessionGroups[$competency->id] ?? collect();
-                $compPoints = 0;
-                $compSessionCount = 0;
+                $compAvgGrade = '-';
 
                 foreach ($sessionsInComp as $s) {
                     $gradeLetter = $evaluationMap[$student->id][$s->id] ?? '-';
@@ -244,21 +252,16 @@ class EvaluationReportService implements EvaluationReportServiceInterface
                     }
                     $html .= '<td class="session-col">' . $gradeLetter . '</td>';
                     
-                    if (!$student->is_exonerated && $gradeLetter !== '-') {
-                        $compPoints += $this->gradeToValue($gradeLetter);
-                        $compSessionCount++;
+                    if (!$student->is_exonerated && $gradeLetter !== '-' && $gradeLetter !== '') {
+                        $compAvgGrade = $gradeLetter;
                     }
                 }
 
-                $compAvgValue = ($compSessionCount > 0) ? $compPoints / $compSessionCount : null;
-                $compAvgGrade = $compAvgValue !== null ? $this->valueToGrade($compAvgValue) : ($student->is_exonerated ? 'EXO' : '-');
+                if ($student->is_exonerated) {
+                    $compAvgGrade = 'EXO';
+                }
                 
                 $html .= '<td class="session-col" style="background-color: #f9f9f9; font-weight: bold;">' . $compAvgGrade . '</td>';
-                
-                if ($compAvgValue !== null) {
-                    $totalPoints += $compAvgValue;
-                    $compCount++;
-                }
             }
 
             $html .= '</tr>';
@@ -277,22 +280,16 @@ class EvaluationReportService implements EvaluationReportServiceInterface
             foreach ($students as $student) {
                 if ($student->is_exonerated) continue;
                 $sessionsInComp = $sessionGroups[$comp->id] ?? collect();
-                $compPoints = 0;
-                $compSessionCount = 0;
+                $compAvgGrade = '-';
                 foreach ($sessionsInComp as $s) {
                     $gradeLetter = $evaluationMap[$student->id][$s->id] ?? '-';
-                    if ($gradeLetter !== '-') {
-                        $compPoints += $this->gradeToValue($gradeLetter);
-                        $compSessionCount++;
+                    if ($gradeLetter !== '-' && $gradeLetter !== '') {
+                        $compAvgGrade = $gradeLetter;
                     }
                 }
-                if ($compSessionCount > 0) {
-                    $avg = $compPoints / $compSessionCount;
-                    $grade = $this->valueToGrade($avg);
-                    if ($grade !== '-') {
-                        $stats[$comp->id][$grade]++;
-                        $stats[$comp->id]['total_eval']++;
-                    }
+                if ($compAvgGrade !== '-') {
+                    $stats[$comp->id][$compAvgGrade]++;
+                    $stats[$comp->id]['total_eval']++;
                 }
             }
         }

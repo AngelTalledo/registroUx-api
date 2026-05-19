@@ -14,5 +14,6 @@ interface DiagnosticEvaluationServiceInterface
     public function getEvaluationById(int $id, int $teacherId): ?DiagnosticEvaluation;
     public function createEvaluation(array $data): DiagnosticEvaluation;
     public function upsertEvaluation(array $data): DiagnosticEvaluation;
+    public function bulkUpsertEvaluations(array $data, int $teacherId): bool;
     public function deleteEvaluation(int $id, int $teacherId): bool;
 }

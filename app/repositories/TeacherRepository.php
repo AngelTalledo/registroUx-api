@@ -38,4 +38,26 @@ class TeacherRepository
         $teacher = Teacher::find($id);
         return $teacher ? $teacher->delete() : false;
     }
+
+    /**
+     * Busca docentes por nombre o email con perfil completo cargado
+     */
+    public function searchFullProfile(string $query): Collection
+    {
+        return Teacher::with([
+            'user',
+            'academicYears.periods',
+            'classrooms.course',
+            'classrooms.grade',
+            'competencies.course'
+        ])
+        ->where(function ($q) use ($query) {
+            $q->where('full_name', 'like', "%$query%")
+              ->orWhereHas('user', function ($uq) use ($query) {
+                  $uq->where('email', 'like', "%$query%");
+              });
+        })
+        ->limit(15) // Limitamos para evitar sobrecarga en búsquedas ambiguas
+        ->get();
+    }
 }

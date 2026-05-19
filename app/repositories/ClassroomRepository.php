@@ -9,13 +9,36 @@ use Illuminate\Database\Eloquent\Collection;
 
 class ClassroomRepository
 {
-    public function findAllByTeacher(int $teacherId, bool $deleted = false): Collection
+    public function findAllByTeacher(int $teacherId, array $filters = []): Collection
     {
         $query = Classroom::where('teacher_id', $teacherId);
-        if ($deleted) {
+        
+        if (!empty($filters['deleted']) && $filters['deleted'] === true) {
             $query->onlyTrashed();
         }
-        return $query->with(['course', 'grade', 'academicYear'])->get();
+
+        if (!empty($filters['course_id'])) {
+            $query->where('course_id', $filters['course_id']);
+        }
+
+        if (!empty($filters['grade_id'])) {
+            $query->where('grade_id', $filters['grade_id']);
+        }
+
+        if (!empty($filters['search'])) {
+            $searchTerm = $filters['search'];
+            $query->where(function($q) use ($searchTerm) {
+                $q->where('section', 'like', "%{$searchTerm}%")
+                  ->orWhereHas('grade', function($qg) use ($searchTerm) {
+                      $qg->where('name', 'like', "%{$searchTerm}%");
+                  });
+            });
+        }
+
+        return $query->with(['course', 'grade', 'academicYear'])
+                     ->orderBy('grade_id', 'asc')
+                     ->orderBy('section', 'asc')
+                     ->get();
     }
 
     public function findByIdAndTeacher(int $id, int $teacherId): ?Classroom
@@ -24,6 +47,16 @@ class ClassroomRepository
                         ->where('id', $id)
                         ->where('teacher_id', $teacherId)
                         ->with(['course', 'grade', 'academicYear'])
+                        ->first();
+    }
+
+    public function findDuplicate(int $teacherId, int $academicYearId, int $gradeId, int $courseId, string $section): ?Classroom
+    {
+        return Classroom::where('teacher_id', $teacherId)
+                        ->where('academic_year_id', $academicYearId)
+                        ->where('grade_id', $gradeId)
+                        ->where('course_id', $courseId)
+                        ->where('section', $section)
                         ->first();
     }
 

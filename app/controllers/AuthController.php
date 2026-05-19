@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 namespace App\Controllers;
-
+                                                     
 use App\Services\UserServiceInterface;
 use App\Services\AuthServiceInterface;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -37,7 +37,7 @@ class AuthController
         try {
             $validator->assert($data);
         } catch (\Respect\Validation\Exceptions\NestedValidationException $e) {
-            return $this->jsonResponse($response, ['status' => 'error', 'errors' => $e->getMessages()], 400);
+            return $this->jsonResponse($response, ['status' => 'error', 'errors' => $e->getMessages()], 200);
         }
 
         $user = $this->userService->authenticateUser($data['email'], $data['password']);
@@ -55,7 +55,8 @@ class AuthController
             'exp' => $expirationTime,
             'sub' => $user->id,
             'email' => $user->email,
-            'teacher_id' => $teacherId
+            'teacher_id' => $teacherId,
+            'is_admin' => (bool) $user->is_admin
         ];
 
         $token = $this->authService->generateToken($payload);
@@ -68,6 +69,7 @@ class AuthController
                 'user' => [
                     'id' => $user->id,
                     'email' => $user->email,
+                    'is_admin' => (bool) $user->is_admin,
                     'teacher_id' => $user->teacher ? $user->teacher->id : null,
                     'teacher' => $user->teacher
                 ]
@@ -89,6 +91,7 @@ class AuthController
                 'user' => [
                     'id' => $user->id,
                     'email' => $user->email,
+                    'is_admin' => (bool) $user->is_admin,
                     'teacher_id' => $user->teacher ? $user->teacher->id : null,
                     'teacher' => $user->teacher
                 ]
@@ -112,7 +115,8 @@ class AuthController
             'exp' => $expirationTime,
             'sub' => $user->id,
             'email' => $user->email,
-            'teacher_id' => $teacherId
+            'teacher_id' => $teacherId,
+            'is_admin' => (bool) $user->is_admin
         ];
 
         $token = $this->authService->generateToken($payload);
@@ -123,5 +127,51 @@ class AuthController
                 'token' => $token
             ]
         ]);
+    }
+
+    public function changePassword(Request $request, Response $response): Response
+    {
+        $user = $this->getAuthenticatedUser($request, $this->userService);
+
+        if (!$user) {
+            return $this->jsonResponse($response, ['status' => 'error', 'message' => 'Sesión no válida'], 401);
+        }
+
+        $data = $request->getParsedBody();
+
+        $validator = v::key('current_password', v::stringType()->notEmpty())
+                        ->key('new_password', v::stringType()->notEmpty()->length(6))
+                        ->key('new_password_confirmation', v::stringType()->notEmpty());
+
+        try {
+            $validator->assert($data);
+        } catch (\Respect\Validation\Exceptions\NestedValidationException $e) {
+            return $this->jsonResponse($response, [
+                'status' => 'error', 
+                'message' => 'Datos inválidos',
+                'errors' => $e->getMessages()
+            ], 200);
+        }
+
+        if ($data['new_password'] !== $data['new_password_confirmation']) {
+            return $this->jsonResponse($response, [
+                'status' => 'error', 
+                'message' => 'La nueva contraseña y la confirmación no coinciden'
+            ], 200);
+        }
+
+        $success = $this->userService->changePassword($user->id, $data['current_password'], $data['new_password']);
+
+        if ($success) {
+            return $this->jsonResponse($response, [
+                'status' => 'success', 
+                'message' => 'Contraseña actualizada correctamente'
+            ]);
+        }
+
+        return $this->jsonResponse($response, [
+            'status' => 'error', 
+            'message' => 'La contraseña actual es incorrecta'
+        ], 200);
     }
 }

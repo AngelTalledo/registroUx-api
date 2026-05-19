@@ -28,18 +28,31 @@ class StudentController
 
     public function index(Request $request, Response $response): Response
     {
-        $teacherId = $this->resolveTeacherIdOrResponse($request, $response, $this->userService);
-        if ($teacherId instanceof Response) return $teacherId;
+        $user = $this->getAuthenticatedUser($request, $this->userService);
+        if (!$user) {
+            return $this->jsonResponse($response, ['status' => 'error', 'message' => 'Sin autorización'], 401);
+        }
 
         $queryParams = $request->getQueryParams();
+        
+        // Si es admin y provee teacher_id, lo usamos. Si no, usamos el suyo propio.
+        $teacherId = ($user->is_admin && isset($queryParams['teacher_id'])) 
+            ? (int) $queryParams['teacher_id'] 
+            : ($user->teacher->id ?? null);
+
+        if (!$teacherId) {
+            return $this->jsonResponse($response, ['status' => 'error', 'message' => 'Docente no resuelto'], 400);
+        }
+
         $filters = [
             'classroom_id' => isset($queryParams['classroom_id']) ? (int) $queryParams['classroom_id'] : null,
             'course_id' => isset($queryParams['course_id']) ? (int) $queryParams['course_id'] : null,
             'grade_id' => isset($queryParams['grade_id']) ? (int) $queryParams['grade_id'] : null,
+            'search' => $queryParams['search'] ?? null,
             'deleted' => isset($queryParams['deleted']) && $queryParams['deleted'] === 'true',
         ];
 
-        $students = $this->service->getAllStudentsByTeacher($teacherId, $filters);
+        $students = $this->service->getAllStudentsByTeacher((int)$teacherId, $filters);
         return $this->jsonResponse($response, $students);
     }
 
@@ -68,8 +81,9 @@ class StudentController
         if (!isset($data['status'])) {
             $data['status'] = true;
         }
+        $data['dni'] = $data['dni'] ?? '';
 
-        $validator = v::key('dni', v::stringType()->length(8, 20))
+        $validator = v::key('dni', v::optional(v::stringType()->length(8, 20)))
                         ->key('full_name', v::stringType()->length(1, 200))
                         ->key('classroom_id', v::intVal())
                         ->key('course_id', v::intVal())
@@ -100,6 +114,9 @@ class StudentController
 
         $id = (int) $args['id'];
         $data = $request->getParsedBody();
+        if (array_key_exists('dni', $data)) {
+            $data['dni'] = $data['dni'] ?? '';
+        }
 
         $validator = v::key('dni', v::optional(v::stringType()->length(8, 20)))
                         ->key('full_name', v::optional(v::stringType()->length(1, 200)))
@@ -174,7 +191,11 @@ class StudentController
         $teacherId = $this->resolveTeacherIdOrResponse($request, $response, $this->userService);
         if ($teacherId instanceof Response) return $teacherId;
 
-        $courses = $this->service->getMyCourses($teacherId);
+        $queryParams = $request->getQueryParams();
+        $academicYearId = isset($queryParams['academic_year_id']) ? (int) $queryParams['academic_year_id'] : null;
+        $academicPeriodId = isset($queryParams['academic_period_id']) ? (int) $queryParams['academic_period_id'] : (isset($queryParams['period_id']) ? (int) $queryParams['period_id'] : null);
+
+        $courses = $this->service->getMyCourses($teacherId, $academicYearId, $academicPeriodId);
         return $this->jsonResponse($response, $courses);
     }
 }

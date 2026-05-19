@@ -2,7 +2,7 @@
 
 require 'vendor/autoload.php';
 
-$settings = (require 'app/config/settings.php')['settings']['db'];
+$settings = (require 'app/Config/settings.php')['settings']['db'];
 
 try {
     $pdo = new PDO(

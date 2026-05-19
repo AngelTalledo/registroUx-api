@@ -14,6 +14,6 @@ interface StudentServiceInterface
     public function createStudent(array $data): Student;
     public function updateStudent(int $id, int $teacherId, array $data): ?Student;
     public function deleteStudent(int $id, int $teacherId): bool;
-    public function getMyCourses(int $teacherId): Collection;
+    public function getMyCourses(int $teacherId, ?int $academicYearId = null, ?int $academicPeriodId = null): Collection;
     public function bulkStoreStudents(int $teacherId, array $data): array;
 }

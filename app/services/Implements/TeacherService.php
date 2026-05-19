@@ -37,4 +37,9 @@ class TeacherService implements TeacherServiceInterface
     {
         return $this->repository->update($id, $data);
     }
+
+    public function searchFullProfile(string $query): Collection
+    {
+        return $this->repository->searchFullProfile($query);
+    }
 }

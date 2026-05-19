@@ -13,4 +13,5 @@ interface TeacherServiceInterface
     public function getTeacherById(int $id): ?Teacher;
     public function createTeacher(array $data): Teacher;
     public function updateTeacher(int $id, array $data): ?Teacher;
+    public function searchFullProfile(string $query): Collection;
 }

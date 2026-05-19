@@ -211,9 +211,8 @@ class EvaluationExcelService implements EvaluationExcelServiceInterface
             
             $col = 3;
             foreach ($competencies as $comp) {
-                $compPoints = 0;
-                $compSessionCount = 0;
                 $sessionsInComp = $sessionGroups[$comp->id] ?? [];
+                $avgGrade = '-';
 
                 foreach ($sessionsInComp as $sComp) {
                     $grade = $evaluationMap[$student->id][$sComp->id] ?? '-';
@@ -223,16 +222,15 @@ class EvaluationExcelService implements EvaluationExcelServiceInterface
                     $sheet->setCellValue($cell, $grade);
                     $this->applyGradeStyle($sheet, $cell, $grade);
                     
-                    if (!$student->is_exonerated && $grade !== '-') {
-                        $compPoints += $this->gradeToValue($grade);
-                        $compSessionCount++;
+                    if (!$student->is_exonerated && $grade !== '-' && $grade !== '') {
+                        $avgGrade = $grade;
                     }
                     $col++;
                 }
                 
-                // Comp Average
-                $avgValue = ($compSessionCount > 0) ? $compPoints / $compSessionCount : null;
-                $avgGrade = $avgValue !== null ? $this->valueToGrade($avgValue) : ($student->is_exonerated ? 'EXO' : '-');
+                if ($student->is_exonerated) {
+                    $avgGrade = 'EXO';
+                }
                 
                 $cell = $this->getColLetter($col).$dataRow;
                 $sheet->setCellValue($cell, $avgGrade);

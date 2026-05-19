@@ -27,6 +27,13 @@ class CourseRepository
                      ->first();
     }
 
+    public function findByNameAndTeacher(string $name, int $teacherId): ?Course
+    {
+        return Course::where('name', $name)
+                     ->where('teacher_id', $teacherId)
+                     ->first();
+    }
+
     public function create(array $data): Course
     {
         return Course::create($data);

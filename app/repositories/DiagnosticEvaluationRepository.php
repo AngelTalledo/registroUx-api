@@ -43,7 +43,17 @@ class DiagnosticEvaluationRepository
 
     public function updateOrCreate(array $criteria, array $data): DiagnosticEvaluation
     {
-        return DiagnosticEvaluation::updateOrCreate($criteria, $data);
+        $record = DiagnosticEvaluation::withTrashed()->where($criteria)->first();
+        
+        if ($record) {
+            if ($record->trashed()) {
+                $record->restore();
+            }
+            $record->update($data);
+            return $record;
+        }
+
+        return DiagnosticEvaluation::create(array_merge($criteria, $data));
     }
 
     public function create(array $data): DiagnosticEvaluation

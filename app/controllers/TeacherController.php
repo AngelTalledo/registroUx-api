@@ -73,4 +73,25 @@ class TeacherController
         $response->getBody()->write(json_encode(['status' => 'success', 'data' => $teacher]));
         return $response->withHeader('Content-Type', 'application/json');
     }
+
+    public function search(Request $request, Response $response): Response
+    {
+        $params = $request->getQueryParams();
+        $query = $params['q'] ?? '';
+
+        if (strlen($query) < 3) {
+            $response->getBody()->write(json_encode(['status' => 'error', 'message' => 'Query too short']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+
+        $teachers = $this->service->searchFullProfile($query);
+        
+        if ($teachers->isEmpty()) {
+            $response->getBody()->write(json_encode(['status' => 'error', 'message' => 'No se encontraron docentes con ese nombre o correo']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
+        }
+
+        $response->getBody()->write(json_encode(['status' => 'success', 'data' => $teachers]));
+        return $response->withHeader('Content-Type', 'application/json');
+    }
 }

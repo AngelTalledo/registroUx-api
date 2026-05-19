@@ -78,8 +78,15 @@ class EvaluationController
             ], 400);
         }
 
-        $evaluation = $this->service->createEvaluation($data);
-        return $this->jsonResponse($response, ['status' => 'success', 'data' => $evaluation], 201);
+        try {
+            $evaluation = $this->service->createEvaluation($data);
+            return $this->jsonResponse($response, ['status' => 'success', 'data' => $evaluation], 201);
+        } catch (\InvalidArgumentException $e) {
+            return $this->jsonResponse($response, [
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
     }
 
     public function upsert(Request $request, Response $response): Response
@@ -104,8 +111,15 @@ class EvaluationController
             ], 400);
         }
 
-        $evaluation = $this->service->upsertEvaluation($data);
-        return $this->jsonResponse($response, ['status' => 'success', 'data' => $evaluation]);
+        try {
+            $evaluation = $this->service->upsertEvaluation($data);
+            return $this->jsonResponse($response, ['status' => 'success', 'data' => $evaluation]);
+        } catch (\InvalidArgumentException $e) {
+            return $this->jsonResponse($response, [
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ], 400);
+        }
     }
 
     public function update(Request $request, Response $response, array $args): Response

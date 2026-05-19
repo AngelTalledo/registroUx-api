@@ -32,6 +32,11 @@ class Student extends Model
         'is_exonerated' => 'boolean'
     ];
 
+    public function setDniAttribute($value)
+    {
+        $this->attributes['dni'] = $value ?? '';
+    }
+
     public function teacher()
     {
         return $this->belongsTo(Teacher::class);

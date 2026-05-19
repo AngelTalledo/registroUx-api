@@ -22,6 +22,7 @@ class DiagnosticEvaluation extends Model
         'aula_id',
         'grade',
         'evaluation_date',
+        'academic_year_id',
     ];
 
     protected $casts = [

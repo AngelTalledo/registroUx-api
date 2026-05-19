@@ -32,9 +32,15 @@ class ClassroomController
         if ($teacherId instanceof Response) return $teacherId;
 
         $queryParams = $request->getQueryParams();
-        $deleted = isset($queryParams['deleted']) && $queryParams['deleted'] === 'true';
+        
+        $filters = [
+            'deleted' => isset($queryParams['deleted']) && $queryParams['deleted'] === 'true',
+            'course_id' => $queryParams['course_id'] ?? null,
+            'grade_id' => $queryParams['grade_id'] ?? null,
+            'search' => $queryParams['search'] ?? null
+        ];
 
-        $classrooms = $this->service->getAllClassroomsByTeacher($teacherId, $deleted);
+        $classrooms = $this->service->getAllClassroomsByTeacher($teacherId, $filters);
         return $this->jsonResponse($response, $classrooms);
     }
 

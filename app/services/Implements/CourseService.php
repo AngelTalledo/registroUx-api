@@ -28,6 +28,11 @@ class CourseService implements CourseServiceInterface
         return $this->repository->findByIdAndTeacher($id, $teacherId);
     }
 
+    public function getCourseByName(string $name, int $teacherId): ?Course
+    {
+        return $this->repository->findByNameAndTeacher($name, $teacherId);
+    }
+
     public function createCourse(array $data): Course
     {
         return $this->repository->create($data);

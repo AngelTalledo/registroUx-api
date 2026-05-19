@@ -43,17 +43,28 @@ class StudentService implements StudentServiceInterface
         return $this->repository->deleteByTeacher($id, $teacherId);
     }
 
-    public function getMyCourses(int $teacherId): Collection
+    public function getMyCourses(int $teacherId, ?int $academicYearId = null, ?int $academicPeriodId = null): Collection
     {
-        return $this->repository->findMyCourses($teacherId);
+        return $this->repository->findMyCourses($teacherId, $academicYearId, $academicPeriodId);
     }
 
     public function bulkStoreStudents(int $teacherId, array $data): array
     {
-        // 1. Fetch current maps for resolution (Optimization: fetch once)
-        $courses = \App\Models\Course::where('teacher_id', $teacherId)->get()->keyBy('name');
-        $grades = \App\Models\Grade::where('teacher_id', $teacherId)->get()->keyBy('name');
-        $classrooms = \App\Models\Classroom::where('teacher_id', $teacherId)->get()->keyBy('section');
+        // 1. Pre-process maps for O(1) instant lookup (Case-insensitive)
+        $coursesMap = \App\Models\Course::where('teacher_id', $teacherId)->get()
+            ->keyBy(fn($c) => strtoupper(trim($c->name)));
+
+        $gradesMap = \App\Models\Grade::where('teacher_id', $teacherId)->get()
+            ->keyBy(fn($g) => strtoupper(trim($g->name)));
+
+        // Create a unique composite key for classrooms: "GRADENAME|SECTION"
+        $classroomsMap = [];
+        $allClassrooms = \App\Models\Classroom::with('grade')->where('teacher_id', $teacherId)->get();
+        foreach ($allClassrooms as $cl) {
+            $gName = strtoupper(trim($cl->grade->name ?? ''));
+            $sName = strtoupper(trim($cl->section));
+            $classroomsMap["$gName|$sName"] = $cl->id;
+        }
 
         $processed = 0;
         $created = 0;
@@ -62,20 +73,28 @@ class StudentService implements StudentServiceInterface
 
         foreach ($data as $index => $item) {
             try {
-                // Resolution (Strictly using English keys: course, grade, classroom)
-                $courseName = $item['course'] ?? null;
-                $gradeName = $item['grade'] ?? null;
-                $sectionName = $item['classroom'] ?? null;
+                // Normalize input names
+                $courseName = strtoupper(trim($item['course'] ?? ''));
+                $gradeName = strtoupper(trim($item['grade'] ?? ''));
+                $sectionName = strtoupper(trim($item['classroom'] ?? ''));
 
-                $courseId = $courseName && isset($courses[$courseName]) ? $courses[$courseName]->id : null;
-                $gradeId = $gradeName && isset($grades[$gradeName]) ? $grades[$gradeName]->id : null;
-                $classroomId = $sectionName && isset($classrooms[$sectionName]) ? $classrooms[$sectionName]->id : null;
+                // Direct lookup in maps
+                $courseId = $coursesMap[$courseName]->id ?? null;
+                $gradeId = $gradesMap[$gradeName]->id ?? null;
+                
+                // If section was provided as "PRIMERO E", clean it
+                $cleanSection = trim(str_ireplace($gradeName, '', $sectionName));
+                
+                // Try resolving classroom by full name or clean section
+                $classroomId = $classroomsMap["$gradeName|$sectionName"] 
+                              ?? $classroomsMap["$gradeName|$cleanSection"] 
+                              ?? null;
 
                 if (!$courseId || !$gradeId || !$classroomId) {
                     $missing = [];
-                    if (!$courseId) $missing[] = "course: " . ($courseName ?? 'n/a');
-                    if (!$gradeId) $missing[] = "grade: " . ($gradeName ?? 'n/a');
-                    if (!$classroomId) $missing[] = "classroom: " . ($sectionName ?? 'n/a');
+                    if (!$courseId) $missing[] = "curso: " . ($item['course'] ?? 'n/a');
+                    if (!$gradeId) $missing[] = "grado: " . ($item['grade'] ?? 'n/a');
+                    if (!$classroomId) $missing[] = "aula: " . ($item['classroom'] ?? 'n/a');
                     
                     $errors[] = "Fila $index: No se pudo resolver " . implode(', ', $missing);
                     continue;

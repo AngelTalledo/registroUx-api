@@ -34,7 +34,8 @@ class UserController
         $this->logger->info("Registrando usuario", ['email' => $data['email'] ?? 'desconocido']);
 
         $validator = v::key('email', v::email())
-                        ->key('password', v::stringType()->length(6, null));
+                        ->key('password', v::stringType()->length(6, null))
+                        ->key('is_admin', v::optional(v::boolType()));
 
         try {
             $validator->assert($data);

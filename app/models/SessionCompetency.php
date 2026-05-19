@@ -22,6 +22,7 @@ class SessionCompetency extends Model
         'classroom_id',
         'date',
         'theme',
+        'description',
         'type',
     ];
 

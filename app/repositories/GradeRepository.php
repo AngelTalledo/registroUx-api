@@ -27,6 +27,13 @@ class GradeRepository
                     ->first();
     }
 
+    public function findByNameAndTeacher(string $name, int $teacherId): ?Grade
+    {
+        return Grade::where('name', $name)
+                    ->where('teacher_id', $teacherId)
+                    ->first();
+    }
+
     public function create(array $data): Grade
     {
         return Grade::create($data);

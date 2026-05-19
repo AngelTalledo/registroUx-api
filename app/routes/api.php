@@ -23,6 +23,7 @@ return function (App $app) {
         $group->group('/auth', function (RouteCollectorProxy $auth) {
             $auth->post('/login', [\App\Controllers\AuthController::class, 'login']);
             $auth->get('/session', [\App\Controllers\AuthController::class, 'session']);
+            $auth->post('/change-password', [\App\Controllers\AuthController::class, 'changePassword']);
             $auth->post('/refresh', [\App\Controllers\AuthController::class, 'refresh']);
         });
 
@@ -32,6 +33,7 @@ return function (App $app) {
         $group->get('/users/{id}', [\App\Controllers\UserController::class, 'show']);
 
         // Docentes
+        $group->get('/teachers/search', [\App\Controllers\TeacherController::class, 'search']);
         $group->get('/teachers', [\App\Controllers\TeacherController::class, 'index']);
         $group->post('/teachers', [\App\Controllers\TeacherController::class, 'store']);
         $group->put('/teachers/{id}', [\App\Controllers\TeacherController::class, 'update']);
@@ -122,6 +124,7 @@ return function (App $app) {
         // Evaluaciones Diagnósticas
         $group->get('/diagnostic-evaluations', [\App\Controllers\DiagnosticEvaluationController::class, 'index']);
         $group->post('/diagnostic-evaluations/upsert', [\App\Controllers\DiagnosticEvaluationController::class, 'upsert']);
+        $group->post('/evaluations/diagnostic-bulk', [\App\Controllers\DiagnosticEvaluationController::class, 'bulkUpsert']);
 
         // Evidencias
         $group->get('/evidences', [\App\Controllers\EvidenceController::class, 'index']);
@@ -151,6 +154,7 @@ return function (App $app) {
 
         // Dashboard
         $group->get('/dashboard/current-schedule', [\App\Controllers\DashboardController::class, 'currentSchedule']);
+        $group->get('/dashboard/academic-stats', [\App\Controllers\DashboardController::class, 'academicStats']);
 
         // Institutions and Header Templates
         $group->get('/header-templates', [\App\Controllers\HeaderTemplateController::class, 'index']);
@@ -170,5 +174,19 @@ return function (App $app) {
         $group->post('/institutions/{institution_id}/logos', [\App\Controllers\InstitutionLogoController::class, 'store']);
         $group->delete('/institution-logos/{id}', [\App\Controllers\InstitutionLogoController::class, 'delete']);
     
+        // Unified Registration (Wizard)
+        $group->group('/registration', function (RouteCollectorProxy $group) {
+            $group->post('', [\App\Controllers\PublicRegistrationController::class, 'register']);
+        });
+
     })->add(\App\Middleware\JwtMiddleware::class);
+    
+    // 🌍 RUTAS PÚBLICAS PARA REGISTRO (WIZARD)
+    $app->group('/api/public/registration', function (RouteCollectorProxy $group) {
+        $group->post('/institution', [\App\Controllers\PublicRegistrationController::class, 'saveInstitution']);
+        $group->post('/account', [\App\Controllers\PublicRegistrationController::class, 'saveAccount']);
+        $group->post('/infrastructure', [\App\Controllers\PublicRegistrationController::class, 'saveInfrastructure']);
+        $group->post('/students', [\App\Controllers\PublicRegistrationController::class, 'saveStudents']);
+        $group->post('/cleanup', [\App\Controllers\PublicRegistrationController::class, 'cleanup']);
+    });
 };

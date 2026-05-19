@@ -28,7 +28,10 @@ class AcademicYearController
 
     public function index(Request $request, Response $response): Response
     {
-        $academicYears = $this->service->getAllAcademicYears();
+        $teacherId = $this->resolveTeacherIdOrResponse($request, $response, $this->userService);
+        if ($teacherId instanceof Response) return $teacherId;
+
+        $academicYears = $this->service->getAllAcademicYears($teacherId);
         return $this->jsonResponse($response, $academicYears);
     }
 

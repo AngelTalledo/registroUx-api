@@ -18,14 +18,19 @@ class ClassroomService implements ClassroomServiceInterface
         $this->repository = $repository;
     }
 
-    public function getAllClassroomsByTeacher(int $teacherId, bool $deleted = false): Collection
+    public function getAllClassroomsByTeacher(int $teacherId, array $filters = []): Collection
     {
-        return $this->repository->findAllByTeacher($teacherId, $deleted);
+        return $this->repository->findAllByTeacher($teacherId, $filters);
     }
 
     public function getClassroomById(int $id, int $teacherId): ?Classroom
     {
         return $this->repository->findByIdAndTeacher($id, $teacherId);
+    }
+
+    public function checkDuplicate(int $teacherId, int $academicYearId, int $gradeId, int $courseId, string $section): ?Classroom
+    {
+        return $this->repository->findDuplicate($teacherId, $academicYearId, $gradeId, $courseId, $section);
     }
 
     public function createClassroom(array $data): Classroom
